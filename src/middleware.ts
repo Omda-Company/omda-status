@@ -14,7 +14,11 @@ export async function middleware(req: NextRequest) {
   const cookie = req.cookies.get(COOKIE)?.value ?? ''
   if (cookie && same(cookie, await tokenFor(password, secret))) return NextResponse.next()
 
-  return new NextResponse(null, { status: 307, headers: { Location: '/login', 'Cache-Control': 'no-store' } })
+  // الـ middleware لازم يحوّل لعنوان كامل (Next بيرفض العنوان النسبي هنا). nextUrl بياخد الدومين من الطلب نفسه.
+  const url = req.nextUrl.clone()
+  url.pathname = '/login'
+  url.search = ''
+  return NextResponse.redirect(url)
 }
 
 export const config = {
