@@ -1,36 +1,9 @@
-import ThemeToggle from '@/components/ThemeToggle'
-import {
-  achievements,
-  asks,
-  budget,
-  freeTools,
-  meta,
-  nextNeeds,
-  payments,
-  phases,
-  type Phase,
-  type State,
-} from '@/data/status'
+import Link from 'next/link'
+import Header from '@/components/Header'
+import { asks, budget, days, meta, nextNeeds, phases, type Phase, type State } from '@/data/status'
+import { Money, ar, daysSince, egp, fmtDay, range, spendTotals, usd } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
-
-const AR = '٠١٢٣٤٥٦٧٨٩'
-/** أرقام عربية في النص العربي، والمبالغ بالدولار تفضل بالأرقام الغربية زي ما بتتكتب عادة. */
-const ar = (v: string | number) => {
-  const s = String(v)
-  return s.includes('$') ? s : s.replace(/\d/g, (d) => AR[Number(d)])
-}
-/** مبلغ بالدولار: اتجاهه ثابت من الشمال لليمين، عشان "40 – 60" ما يتقريش مقلوب جوه النص العربي. */
-const Money = ({ children }: { children: React.ReactNode }) => (
-  <bdi dir="ltr" style={{ unicodeBidi: 'isolate' }}>
-    {children}
-  </bdi>
-)
-const fmtDate = (iso: string) =>
-  new Date(iso + 'T12:00:00').toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })
-const daysSince = (iso: string) => Math.max(0, Math.floor((Date.now() - new Date(iso + 'T00:00:00+02:00').getTime()) / 86_400_000))
-const usd = (n: number) => '$' + n.toLocaleString('en-US')
-const range = ([a, b]: [number, number]) => (a === b ? usd(a) : `${usd(a)} – ${usd(b)}`)
 
 /** إنجاز المرحلة: المهمة الخالصة = 1، واللي شغالين فيها = نص. */
 const progress = (p: Phase) =>
@@ -42,50 +15,21 @@ const PHASE_CHIP: Record<State, { cls: string; text: string }> = {
   active: { cls: 'active', text: 'المرحلة الحالية' },
   todo: { cls: 'free', text: 'لم تبدأ' },
 }
+const SR = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' } as const
 
 export default function Page() {
   const currentIndex = Math.max(0, phases.findIndex((p) => p.state === 'active'))
   const current = phases[currentIndex]
   const pct = progress(current)
-  const doneCount = achievements.filter((a) => a.state === 'done').length
-  const spent = payments.reduce((s, p) => s + p.amount, 0)
-  const approved = budget.filter((b) => b.status === 'approved')
-  const approvedMax = approved.reduce((s, b) => s + b.monthly[1], 0)
-  const requested: [number, number] = [budget.reduce((s, b) => s + b.monthly[0], 0), budget.reduce((s, b) => s + b.monthly[1], 0)]
-  const maxLine = Math.max(...budget.map((b) => b.monthly[1]))
-  const days = daysSince(meta.startedAt) + 1
+  const doneCount = days.reduce((s, d) => s + d.items.filter((i) => i.state === 'done').length, 0)
+  const t = spendTotals()
+  const paidLines = budget.filter((b) => b.status === 'paid' || b.status === 'approved').length
+  const sinceStart = daysSince(meta.startedAt) + 1
   const waiting = asks.filter((a) => a.state === 'waiting')
 
   return (
     <>
-      <header className="band">
-        <div className="wrap">
-          <div className="badge">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="شعار بن العمدة" width={62} height={62} />
-          </div>
-          <div className="band-text">
-            <p className="eyebrow">{meta.company} · سري — للإدارة</p>
-            <h1>{meta.title}</h1>
-            <div className="band-meta">
-              <span>
-                إعداد: <b>{meta.preparedBy}</b>
-              </span>
-              <span>
-                آخر تحديث: <b>{fmtDate(meta.updatedAt)}</b>
-              </span>
-            </div>
-          </div>
-          <div className="band-tools">
-            <ThemeToggle />
-            <form method="post" action="/api/logout">
-              <button className="ghost" type="submit">
-                خروج
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
+      <Header current="/" title={meta.title} pdfName="لوحة-متابعة-التحول" />
 
       <main className="wrap">
         <section className="stats" aria-label="ملخص">
@@ -106,12 +50,14 @@ export default function Page() {
           <div className="stat">
             <span className="stat-label">إنجازات مكتملة</span>
             <span className="stat-value num">{ar(doneCount)}</span>
-            <span className="stat-sub">خلال {ar(days)} يومًا من البدء</span>
+            <span className="stat-sub">خلال {ar(sinceStart)} يومًا من البدء</span>
           </div>
           <div className="stat">
-            <span className="stat-label">المصروف من ميزانية الشركة</span>
-            <span className="stat-value num"><Money>{usd(spent)}</Money></span>
-            <span className="stat-sub">{approved.length ? <>المعتمد شهريًا حتى <Money>{usd(approvedMax)}</Money></> : 'لم تُعتمد الميزانية بعد'}</span>
+            <span className="stat-label">المصروف حتى الآن</span>
+            <span className="stat-value num">{egp(t.totalEgp)}</span>
+            <span className="stat-sub num">
+              <Money>{usd(t.totalUsd)}</Money> بسعر صرف يوم الشراء
+            </span>
           </div>
         </section>
 
@@ -129,7 +75,10 @@ export default function Page() {
                   <li key={p.id} className={`phase ${p.state}`} aria-current={p.state === 'active' ? 'step' : undefined}>
                     <div className="phase-top">
                       <span className="phase-no">المرحلة {ar(i + 1)}</span>
-                      <span className={`chip ${chip.cls}`}>{p.state === 'todo' ? '🔒 ' : ''}{chip.text}</span>
+                      <span className={`chip ${chip.cls}`}>
+                        {p.state === 'todo' ? '🔒 ' : ''}
+                        {chip.text}
+                      </span>
                     </div>
                     <h3>{p.title}</h3>
                     <p className="phase-period">{ar(p.period)}</p>
@@ -153,9 +102,7 @@ export default function Page() {
                           </span>
                           <span>
                             {ar(it.title)}
-                            <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>
-                              {it.state === 'done' ? ' (مكتملة)' : it.state === 'active' ? ' (قيد التنفيذ)' : ' (لم تبدأ)'}
-                            </span>
+                            <span style={SR}>{it.state === 'done' ? ' (مكتملة)' : it.state === 'active' ? ' (قيد التنفيذ)' : ' (لم تبدأ)'}</span>
                           </span>
                         </li>
                       ))}
@@ -168,33 +115,43 @@ export default function Page() {
         </section>
 
         <div className="cols">
-          <section className="panel" aria-labelledby="ach-h">
+          <section className="panel" aria-labelledby="days-h">
             <div className="panel-h">
-              <h2 id="ach-h">ما تم إنجازه</h2>
+              <h2 id="days-h">سجل العمل اليومي</h2>
               <p>من الأحدث إلى الأقدم</p>
             </div>
             <div className="panel-b">
-              <ol className="feed">
-                {achievements.map((a) => (
-                  <li key={a.date + a.title} className="ach">
-                    <span className="ach-date num">{fmtDate(a.date)}</span>
-                    <div>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
-                        <h3>{a.title}</h3>
-                        <span className={`chip ${a.state === 'done' ? 'ok' : 'active'}`}>{a.state === 'done' ? '✓ مكتمل' : 'قيد التنفيذ'}</span>
-                      </div>
-                      <p>{ar(a.result)}</p>
-                      {a.figures && (
-                        <div className="figs">
-                          {a.figures.map((f) => (
-                            <span key={f.label} className="fig num">
-                              <b>{f.value.includes('$') ? <Money>{f.value}</Money> : ar(f.value)}</b>
-                              {f.label}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+              <ol className="days">
+                {days.map((d) => (
+                  <li key={d.date} className="day">
+                    <div className="day-h">
+                      <span className="day-dot" aria-hidden />
+                      <h3 className="num">{fmtDay(d.date)}</h3>
+                      <span className="day-count num">
+                        {ar(d.items.length)} {d.items.length === 1 ? 'إنجاز' : 'إنجازات'}
+                      </span>
                     </div>
+                    <ul className="day-items">
+                      {d.items.map((a) => (
+                        <li key={a.title} className="ach">
+                          <div className="ach-top">
+                            <h4>{ar(a.title)}</h4>
+                            <span className={`chip ${a.state === 'done' ? 'ok' : 'active'}`}>{a.state === 'done' ? '✓ مكتمل' : 'قيد التنفيذ'}</span>
+                          </div>
+                          {a.result && <p>{ar(a.result)}</p>}
+                          {a.figures && (
+                            <div className="figs">
+                              {a.figures.map((f) => (
+                                <span key={f.label} className="fig num">
+                                  <b>{f.value.includes('$') ? <Money>{f.value}</Money> : ar(f.value)}</b>
+                                  {f.label}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
                   </li>
                 ))}
               </ol>
@@ -204,57 +161,34 @@ export default function Page() {
           <div className="stack">
             <section className="panel" aria-labelledby="money-h">
               <div className="panel-h">
-                <h2 id="money-h">الميزانية والمصروفات</h2>
-                <p>بالدولار الأمريكي</p>
+                <h2 id="money-h">المصروفات</h2>
+                <Link href="/expenses" className="more no-print">
+                  التفاصيل ←
+                </Link>
               </div>
               <div className="panel-b">
                 <div className="money num">
                   <div>
-                    <span>المصروف فعليًا</span>
-                    <b><Money>{usd(spent)}</Money></b>
+                    <span>المدفوع حتى الآن</span>
+                    <b>{egp(t.totalEgp)}</b>
+                    <small>
+                      <Money>{usd(t.totalUsd)}</Money>
+                    </small>
                   </div>
                   <div>
-                    <span>المعتمد شهريًا</span>
-                    <b><Money>{usd(approvedMax)}</Money></b>
+                    <span>مستحق السداد</span>
+                    <b>{egp(t.owedEgp)}</b>
+                    <small>بسعر يوم الشراء</small>
                   </div>
                   <div>
                     <span>المطلوب شهريًا</span>
-                    <b><Money>{range(requested)}</Money></b>
+                    <b>
+                      <Money>{range(t.requested)}</Money>
+                    </b>
+                    <small>{ar(paidLines)} من {ar(budget.length)} بنود مفعّلة</small>
                   </div>
                 </div>
-                <h3 className="sub-h">بنود الميزانية المطلوبة</h3>
-                <ul className="lines">
-                  {budget.map((b) => (
-                    <li key={b.name} className="line" title={b.purpose}>
-                      <div className="line-top">
-                        <span>
-                          {b.name} <small>· {ar(b.detail)}</small>
-                        </span>
-                        <span className="num" style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
-                          <Money>{range(b.monthly)}</Money>
-                          <span className={`chip ${b.status === 'approved' ? 'ok' : b.status === 'free' ? 'free' : 'wait'}`}>
-                            {b.status === 'approved' ? '✓ معتمد' : b.status === 'free' ? 'مجاني' : 'بانتظار الاعتماد'}
-                          </span>
-                        </span>
-                      </div>
-                      <div className="line-bar" aria-hidden>
-                        <span style={{ width: `${(b.monthly[1] / maxLine) * 100}%` }} />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                <h3 className="sub-h">أُنجز حتى الآن بأدوات مجانية</h3>
-                <ul className="free-list">
-                  {freeTools.map((t) => (
-                    <li key={t.name}>
-                      <span>
-                        {t.name} <small>· {t.use}</small>
-                      </span>
-                      <small className="num">{ar(t.cost)}</small>
-                    </li>
-                  ))}
-                </ul>
-                <p className="note">الأرقام من تقرير تقدير التكاليف ({ar('20 أكتوبر 2026')}). وأي مشروع جديد يُعرض له تقدير مستقل قبل البدء.</p>
+                <p className="note">كل عملية شراء مسجلة بسعر الدولار يوم شرائها. التفاصيل الكاملة في صفحة المصروفات.</p>
               </div>
             </section>
 
