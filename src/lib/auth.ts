@@ -11,12 +11,14 @@
 export const COOKIE = 'omda_status'
 export const MAX_AGE = 60 * 60 * 24 * 30 // 30 يوم
 
-/** بيقبل الاسم بـ OMDA_ في أوله أو من غيرها، عشان اسم مكتوب بطريقة تانية في Vercel ما يقفلش اللوحة. */
-const env = (name: string) => (process.env[name] ?? process.env[`OMDA_${name}`] ?? '').trim()
-
+/**
+ * بيقبل الاسم بـ OMDA_ في أوله أو من غيرها، عشان اسم مكتوب بطريقة تانية في Vercel ما يقفلش اللوحة.
+ * لازم كل اسم يتكتب صريح (process.env.X): الـ middleware بيشتغل على Edge، وهناك الاسم المتركّب
+ * (process.env[name]) ما بيتقراش وبيوقّع الـ middleware.
+ */
 export function config() {
-  const password = env('STATUS_PASSWORD')
-  const secret = env('STATUS_SECRET')
+  const password = (process.env.STATUS_PASSWORD || process.env.OMDA_STATUS_PASSWORD || '').trim()
+  const secret = (process.env.STATUS_SECRET || process.env.OMDA_STATUS_SECRET || '').trim()
   return { password, secret, ready: password.length > 0 && secret.length >= 16 }
 }
 
