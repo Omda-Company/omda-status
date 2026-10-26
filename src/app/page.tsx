@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Header from '@/components/Header'
-import { asks, budget, days, meta, nextNeeds, phases, type Phase, type State } from '@/data/status'
+import type { Phase, State } from '@/data/types'
+import { getStatus } from '@/lib/data'
 import { Money, ar, daysSince, egp, fmtDay, range, spendTotals, usd } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
@@ -17,19 +18,21 @@ const PHASE_CHIP: Record<State, { cls: string; text: string }> = {
 }
 const SR = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' } as const
 
-export default function Page() {
+export default async function Page() {
+  const data = await getStatus()
+  const { asks, budget, days, meta, nextNeeds, phases } = data
   const currentIndex = Math.max(0, phases.findIndex((p) => p.state === 'active'))
   const current = phases[currentIndex]
   const pct = progress(current)
   const doneCount = days.reduce((s, d) => s + d.items.filter((i) => i.state === 'done').length, 0)
-  const t = spendTotals()
+  const t = spendTotals(data)
   const paidLines = budget.filter((b) => b.status === 'paid' || b.status === 'approved').length
   const sinceStart = daysSince(meta.startedAt) + 1
   const waiting = asks.filter((a) => a.state === 'waiting')
 
   return (
     <>
-      <Header current="/" title={meta.title} pdfName="لوحة-متابعة-التحول" />
+      <Header meta={meta} current="/" title={meta.title} pdfName="لوحة-متابعة-التحول" />
 
       <main className="wrap">
         <section className="stats" aria-label="ملخص">

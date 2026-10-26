@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import PrintButton from '@/components/PrintButton'
 import ThemeToggle from '@/components/ThemeToggle'
-import { meta } from '@/data/status'
+import type { Meta } from '@/data/types'
 import { fmtDate } from '@/lib/format'
 
 const PAGES = [
@@ -9,7 +9,7 @@ const PAGES = [
   { href: '/expenses', label: 'المصروفات' },
 ]
 
-export default function Header({ current, title, pdfName }: { current: string; title: string; pdfName: string }) {
+export default function Header({ meta, current, title, pdfName }: { meta: Meta; current: string; title: string; pdfName: string }) {
   return (
     <header className="band">
       <div className="wrap">

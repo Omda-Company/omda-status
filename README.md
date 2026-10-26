@@ -22,21 +22,32 @@ npm run dev                  # http://localhost:3000
    - `STATUS_SECRET`: نص عشوائي 32 حرف أو أكتر. تقدر تولّده بـ `openssl rand -hex 32`.
 4. Deploy. لو المتغيرين مش موجودين، اللوحة كلها بتفضل مقفولة وبتقول "غير مهيأة".
 
-## التحديث
+## البيانات والتحديث
 
-كل البيانات في ملف واحد: [src/data/status.ts](src/data/status.ts). بتعدّله، وتعمل commit وpush، وVercel بينشر لوحده في أقل من دقيقة.
+**الريبو public، فمفيهوش أي بيانات.** الإنجازات والمصروفات والسداد متخزنين في Supabase مخصوصة للعمدة، في جدول `dashboard_data` (صف `key = 'status'`). وعليه RLS من غير أي policies، فالسيرفر بس هو اللي بيقراه بالمفتاح السري.
 
-| لما يحصل | تعدّل في |
+- **النسخة اللي بتتعدّل:** `D:\Al-Omda\data\status\status.json`، برّه أي ريبو. وشكلها في [src/data/types.ts](src/data/types.ts).
+- **الرفع:** `npm run push-data`. بيقرا المفتاح من `D:\Al-Omda\.env`، ويفحص الملف، ويرفعه. والتحديث بيظهر على الموقع خلال دقيقة، من غير deploy.
+
+| لما يحصل | تعدّل في status.json |
 |---|---|
-| مهمة خلصت | `phases[...].items[...].state` ← `'done'` |
-| إنجاز جديد | سطر جديد أول `achievements`، ومعاه رقم أو نتيجة |
-| الإدارة اعتمدت بند | `budget[...].status` ← `'approved'` |
-| اتدفع مبلغ | سطر في `payments` |
+| مهمة خلصت | `phases[].items[].state` ← `"done"` |
+| شغل يوم جديد | يوم جديد أول `days`، وكل إنجاز معاه رقم |
+| اتشترى حاجة بالدولار | سطر في `payments`، فيه التاريخ والمبلغ و**سعر الصرف يوم الشراء** |
+| الشركة سددت | سطر في `reimbursements`: التاريخ، والمبلغ بالجنيه، و`from` |
+| بند ميزانية اتعتمد أو اتدفع | `budget[].status` |
 | طلب جديد من الإدارة، أو طلب اتنفذ | `asks` |
-| مرحلة خلصت | المرحلة دي `'done'`، واللي بعدها `'active'`، فبتتلون والباقي يفضل رمادي |
+| مرحلة خلصت | المرحلة دي `"done"`، واللي بعدها `"active"` |
 | أي تحديث | `meta.updatedAt` |
 
-**قواعد المحتوى:** فصحى. ومن غير فجوات، ولا قرارات داخلية، ولا أدوار ناس. وأي رقم لازم يكون حقيقي ومصدره `omda-ai`.
+### الإعداد لأول مرة
+
+1. مشروع Supabase للعمدة (الخطوات في `omda-ai/supabase/README.md`)، وشغّل [supabase/migrations/001_dashboard_data.sql](supabase/migrations/001_dashboard_data.sql) في SQL Editor.
+2. في `D:\Al-Omda\.env`: `OMDA_SUPABASE_URL` و`OMDA_SUPABASE_SECRET_KEY`.
+3. في Vercel: `SUPABASE_URL` و`SUPABASE_SECRET_KEY` و`CRON_SECRET`، وبعدين Redeploy.
+4. `npm run push-data`.
+
+**Supabase المجاني بيقف لوحده بعد أسبوع من غير نشاط.** عشان كده Vercel بيبعت طلب لـ `/api/keepalive` كل يوم الساعة 6 الصبح (`vercel.json`)، والطلب محمي بـ `CRON_SECRET`.
 
 ## الحماية
 

@@ -1,4 +1,4 @@
-import { meta } from '@/data/status'
+import { BRAND as meta } from '@/lib/brand'
 
 export const dynamic = 'force-dynamic'
 

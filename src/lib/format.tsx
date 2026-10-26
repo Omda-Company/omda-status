@@ -1,4 +1,4 @@
-import { budget, payments, reimbursements, type Payment } from '@/data/status'
+import type { Payment, Status } from '@/data/types'
 
 const AR = '٠١٢٣٤٥٦٧٨٩'
 
@@ -31,23 +31,22 @@ export const Money = ({ children }: { children: React.ReactNode }) => (
 export const toEgp = (p: Payment) => p.usd * p.rate
 
 /** إجماليات المصروفات: كل عملية بسعر صرف يوم شرائها. */
-export function spendTotals() {
+export function spendTotals({ payments, reimbursements, budget }: Status) {
   const totalUsd = payments.reduce((s, p) => s + p.usd, 0)
   const totalEgp = payments.reduce((s, p) => s + toEgp(p), 0)
   const paidBackEgp = reimbursements.reduce((s, r) => s + r.egp, 0)
   const owedEgp = Math.max(0, totalEgp - paidBackEgp)
-  const monthlyUsd = payments.filter((p) => p.recurring === 'monthly').reduce((s, p) => s + p.usd, 0)
   // سعر مرجعي للتقديرات: سعر آخر عملية شراء
   const latest = [...payments].sort((a, b) => b.date.localeCompare(a.date))[0]
   const refRate = latest?.rate ?? 0
   const requested: [number, number] = [budget.reduce((s, b) => s + b.monthly[0], 0), budget.reduce((s, b) => s + b.monthly[1], 0)]
-  return { totalUsd, totalEgp, owedEgp, paidBackEgp, monthlyUsd, refRate, refDate: latest?.date, requested }
+  return { totalUsd, totalEgp, owedEgp, paidBackEgp, refRate, refDate: latest?.date, requested }
 }
 
 export type Settle = { state: 'paid' | 'partial' | 'owed'; remaining: number }
 
 /** توزيع دفعات السداد على المشتريات من الأقدم للأحدث، فيبان كل عملية اتسددت قد إيه. */
-export function settlement(): Map<Payment, Settle> {
+export function settlement({ payments, reimbursements }: Status): Map<Payment, Settle> {
   let pool = reimbursements.reduce((s, r) => s + r.egp, 0)
   const out = new Map<Payment, Settle>()
   const oldestFirst = payments.map((p, i) => ({ p, i })).sort((a, b) => a.p.date.localeCompare(b.p.date) || a.i - b.i)

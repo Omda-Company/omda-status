@@ -1,5 +1,5 @@
 import Header from '@/components/Header'
-import { budget, freeTools, meta, payments, reimbursements } from '@/data/status'
+import { getStatus } from '@/lib/data'
 import { Money, RECURRING, ar, egp, fmtDate, range, settlement, spendTotals, toEgp, usd } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
@@ -11,10 +11,12 @@ const STATUS = {
   free: { cls: 'free', text: 'مجاني' },
 } as const
 
-export default function Expenses() {
-  const t = spendTotals()
+export default async function Expenses() {
+  const data = await getStatus()
+  const { budget, freeTools, meta, payments, reimbursements } = data
+  const t = spendTotals(data)
   const rows = [...payments].sort((a, b) => b.date.localeCompare(a.date))
-  const settle = settlement()
+  const settle = settlement(data)
   const SETTLE = {
     paid: { cls: 'ok', text: () => '✓ مسدد' },
     partial: { cls: 'wait', text: (r: number) => `متبقٍ ${egp(r)}` },
@@ -24,7 +26,7 @@ export default function Expenses() {
 
   return (
     <>
-      <Header current="/expenses" title="المصروفات" pdfName="المصروفات" />
+      <Header meta={meta} current="/expenses" title="المصروفات" pdfName="المصروفات" />
 
       <main className="wrap">
         <section className="stats" aria-label="ملخص المصروفات">
