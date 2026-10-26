@@ -177,6 +177,12 @@ main { padding-block: 24px 48px; display: grid; gap: 22px; }
 .money span { display: block; font-size: 0.75rem; color: var(--muted); }
 .money b { display: block; font-family: var(--font-head), sans-serif; font-size: 1.1rem; color: var(--espresso); }
 .money small { display: block; font-size: 0.75rem; color: var(--muted); }
+/* المبالغ ما تتكسرش على سطرين */
+bdi[dir='ltr'] { white-space: nowrap; }
+@media (max-width: 560px) {
+  .money { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .line-top { flex-wrap: wrap; }
+}
 .lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .line { display: grid; gap: 4px; }
 .line-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; font-size: 0.88rem; }
