@@ -1,6 +1,6 @@
 import Header from '@/components/Header'
-import { budget, freeTools, meta, payments } from '@/data/status'
-import { Money, RECURRING, ar, egp, fmtDate, range, spendTotals, toEgp, usd } from '@/lib/format'
+import { budget, freeTools, meta, payments, reimbursements } from '@/data/status'
+import { Money, RECURRING, ar, egp, fmtDate, range, settlement, spendTotals, toEgp, usd } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,6 +14,12 @@ const STATUS = {
 export default function Expenses() {
   const t = spendTotals()
   const rows = [...payments].sort((a, b) => b.date.localeCompare(a.date))
+  const settle = settlement()
+  const SETTLE = {
+    paid: { cls: 'ok', text: () => '✓ مسدد' },
+    partial: { cls: 'wait', text: (r: number) => `متبقٍ ${egp(r)}` },
+    owed: { cls: 'wait', text: () => 'مستحق' },
+  } as const
   const maxLine = Math.max(...budget.map((b) => b.monthly[1]))
 
   return (
@@ -82,7 +88,11 @@ export default function Expenses() {
                         <b>{egp(toEgp(p))}</b>
                       </td>
                       <td>
-                        <span className={`chip ${p.reimbursed ? 'ok' : 'wait'}`}>{p.reimbursed ? '✓ تم السداد' : 'مستحق'}</span>
+                        {(() => {
+                          const st = settle.get(p) ?? { state: 'owed' as const, remaining: toEgp(p) }
+                          const v = SETTLE[st.state]
+                          return <span className={`chip ${v.cls}`}>{v.text(st.remaining)}</span>
+                        })()}
                       </td>
                     </tr>
                   ))}
@@ -96,7 +106,7 @@ export default function Expenses() {
                     <td />
                     <td>{egp(t.totalEgp)}</td>
                     <td>
-                      <span className="chip wait">مستحق {egp(t.owedEgp)}</span>
+                      <span className={`chip ${t.owedEgp > 0 ? 'wait' : 'ok'}`}>{t.owedEgp > 0 ? `مستحق ${egp(t.owedEgp)}` : '✓ مسدد بالكامل'}</span>
                     </td>
                   </tr>
                 </tfoot>
@@ -105,6 +115,50 @@ export default function Expenses() {
             <p className="note">
               المبلغ بالجنيه = المبلغ بالدولار × سعر الدولار يوم الشراء. والاشتراكات الشهرية تُسجَّل عملية جديدة عند كل تجديد بسعر يومها.
             </p>
+          </div>
+        </section>
+
+        <section className="panel" aria-labelledby="refund-h">
+          <div className="panel-h">
+            <h2 id="refund-h">دفعات السداد</h2>
+            <p>ما سددته الشركة بالجنيه المصري</p>
+          </div>
+          <div className="panel-b">
+            {reimbursements.length === 0 ? (
+              <p className="note" style={{ margin: 0 }}>لم تُسجل دفعات سداد بعد.</p>
+            ) : (
+              <div className="table-wrap">
+                <table className="table num" style={{ minWidth: 420 }}>
+                  <thead>
+                    <tr>
+                      <th>التاريخ</th>
+                      <th>المبلغ</th>
+                      <th>ملاحظة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...reimbursements].sort((a, b) => b.date.localeCompare(a.date)).map((r) => (
+                      <tr key={r.date + r.egp}>
+                        <td>{fmtDate(r.date)}</td>
+                        <td>
+                          <b>{egp(r.egp)}</b>
+                        </td>
+                        <td>{r.note ?? 'سداد من الشركة'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td>إجمالي المسدد</td>
+                      <td>{egp(t.paidBackEgp)}</td>
+                      <td>
+                        <span className={`chip ${t.owedEgp > 0 ? 'wait' : 'ok'}`}>{t.owedEgp > 0 ? `المتبقي ${egp(t.owedEgp)}` : '✓ لا يوجد مستحق'}</span>
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
           </div>
         </section>
 

@@ -280,17 +280,26 @@ export type Payment = {
   usd: number // المدفوع بالدولار
   rate: number // سعر الدولار بالجنيه يوم الشراء. المقابل بالجنيه = usd × rate
   recurring: 'monthly' | 'yearly' | 'once'
-  reimbursed: boolean // الشركة ردّت المبلغ بالجنيه ولا لسه
 }
 
 /**
  * المشتريات اللي أنس دفعها بالدولار، والشركة بتسددها بالجنيه بسعر يوم الشراء.
- * ⚠️ كل سطر يتأكد من أنس: التاريخ، والمبلغ، وسعر الصرف، وحالة السداد.
+ * ⚠️ كل سطر يتأكد من أنس: التاريخ، والمبلغ، وسعر الصرف.
  */
 export const payments: Payment[] = [
-  { date: '2026-10-26', item: 'اشتراكات Claude', detail: 'أداة الذكاء الاصطناعي', usd: 44, rate: 55, recurring: 'monthly', reimbursed: false },
+  { date: '2026-10-26', item: 'اشتراكات Claude', detail: 'أداة الذكاء الاصطناعي', usd: 44, rate: 55, recurring: 'monthly' },
   // ⚠️ تاريخ GitHub وسعر صرفه لسه ما اتأكدوش من أنس
-  { date: '2026-10-26', item: 'GitHub Team', detail: 'مستخدم واحد', usd: 4, rate: 55, recurring: 'monthly', reimbursed: false },
+  { date: '2026-10-26', item: 'GitHub Team', detail: 'مستخدم واحد', usd: 4, rate: 55, recurring: 'monthly' },
+]
+
+export type Reimbursement = { date: string; egp: number; note?: string }
+
+/**
+ * دفعات السداد اللي الشركة دفعتها لأنس بالجنيه. بتغطي المشتريات من الأقدم للأحدث.
+ * ما يتكتبش اسم اللي دفع (اللوحة للإدارة، والاسم الوحيد فيها اسم أنس).
+ */
+export const reimbursements: Reimbursement[] = [
+  { date: '2026-10-26', egp: 2220, note: 'دفعة أولى' },
 ]
 
 /** أدوات اتستخدمت من غير ما تتصرف عليها ميزانية. */
