@@ -1,6 +1,6 @@
 import Header from '@/components/Header'
 import { getStatus } from '@/lib/data'
-import { Money, RECURRING, ar, egp, fmtDate, range, settlement, spendTotals, toEgp, usd } from '@/lib/format'
+import { Money, RECURRING, ar, egp, fmtDate, range, saved, savingTotals, settlement, spendTotals, toEgp, usd } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +13,8 @@ const STATUS = {
 
 export default async function Expenses() {
   const data = await getStatus()
-  const { budget, freeTools, meta, payments, reimbursements } = data
+  const { budget, freeTools, meta, payments, reimbursements, savings = [] } = data
+  const sv = savingTotals(savings)
   const t = spendTotals(data)
   const rows = [...payments].sort((a, b) => b.date.localeCompare(a.date))
   const settle = settlement(data)
@@ -53,6 +54,76 @@ export default async function Expenses() {
             <span className="stat-sub">بالجنيه المصري</span>
           </div>
         </section>
+
+        {savings.length > 0 && (
+          <section className="panel save-panel" aria-labelledby="save-h">
+            <div className="panel-h">
+              <h2 id="save-h">ما وفّرناه للشركة</h2>
+              <p>مقارنةً بتقرير تقدير التكاليف ({ar('20 أكتوبر 2026')})</p>
+            </div>
+            <div className="panel-b">
+              <div className="money num">
+                <div>
+                  <span>الوفر شهريًا</span>
+                  <b>
+                    <Money>{range(sv.monthly)}</Money>
+                  </b>
+                </div>
+                {t.refRate > 0 && (
+                  <div>
+                    <span>تقديريًا بالجنيه</span>
+                    <b>{range(sv.monthly.map((n) => n * t.refRate) as [number, number], egp)}</b>
+                  </div>
+                )}
+                <div>
+                  <span>الوفر المتوقع خلال عام</span>
+                  <b>
+                    <Money>{range(sv.yearly)}</Money>
+                  </b>
+                </div>
+              </div>
+
+              <ul className="saves">
+                {savings.map((s) => (
+                  <li key={s.item} className="save">
+                    <div className="save-top">
+                      <b>
+                        {s.item}
+                        {s.term && (
+                          <>
+                            {' '}
+                            <small dir="ltr">({s.term})</small>
+                          </>
+                        )}
+                      </b>
+                      <span className="chip ok num">
+                        وفر <Money>{range(saved(s))}</Money> شهريًا
+                      </span>
+                    </div>
+                    {s.explain && <p className="save-explain">{s.explain}</p>}
+                    <div className="save-cmp num">
+                      <span className="save-was">
+                        <small>بدلًا من</small>
+                        <s>
+                          {s.instead} · <Money>{range(s.insteadUsd)}</Money>
+                        </s>
+                      </span>
+                      <span className="save-now">
+                        <small>ما فعلناه</small>
+                        {s.ourWay} · <Money>{s.ourUsd > 0 ? usd(s.ourUsd) : '$0'}</Money>
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              {t.refRate > 0 && (
+                <p className="note">
+                  الوفر = تكلفة البديل في التقرير − ما يُدفع فعليًا، شهريًا. والتقدير بالجنيه بسعر آخر عملية شراء ({ar(t.refRate)} ج.م للدولار).
+                </p>
+              )}
+            </div>
+          </section>
+        )}
 
         <section className="panel" aria-labelledby="buys-h">
           <div className="panel-h">

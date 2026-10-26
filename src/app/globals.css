@@ -242,3 +242,18 @@ bdi[dir='ltr'] { white-space: nowrap; }
   .table-wrap { overflow: visible; }
   .foot { padding-bottom: 0; }
 }
+
+/* ما وفّرناه للشركة */
+.save-panel { border-top: 4px solid var(--ok); }
+.saves { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.save { border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; background: var(--paper); }
+.save-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.save-top small { color: var(--muted); font-weight: 400; font-size: 0.78rem; }
+.save-explain { margin: 6px 0 0; font-size: 0.8rem; color: var(--muted); line-height: 1.7; }
+.save-cmp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-top: 10px; font-size: 0.84rem; }
+.save-cmp > span { background: var(--wash); border-radius: 8px; padding: 8px 10px; line-height: 1.6; }
+.save-cmp small { display: block; font-size: 0.72rem; color: var(--muted); }
+.save-was { color: var(--muted); }
+.save-was s { text-decoration-color: var(--muted); }
+.save-now { color: var(--ok); font-weight: 600; }
+@media (max-width: 600px) { .save-cmp { grid-template-columns: 1fr; } }

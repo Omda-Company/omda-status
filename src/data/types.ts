@@ -29,6 +29,21 @@ export type Payment = { date: string; item: string; detail?: string; usd: number
 export type Reimbursement = { date: string; egp: number; from: string; note?: string }
 
 export type FreeTool = { name: string; use: string; cost: string }
+
+/**
+ * بند وفّرناه مقارنةً بتقرير تقدير التكاليف: البديل المكلّف (insteadUsd شهريًا)
+ * مقابل اللي عملناه فعلًا (ourUsd شهريًا). الوفر = insteadUsd − ourUsd.
+ * term: المصطلح بالإنجليزي (Cloud، Server...)، وexplain: شرحه لغير المتخصص.
+ */
+export type Saving = {
+  item: string
+  term?: string
+  explain?: string
+  instead: string
+  insteadUsd: [number, number]
+  ourWay: string
+  ourUsd: number
+}
 export type Ask = { title: string; detail: string; since: string; state: 'waiting' | 'done' }
 export type NextNeed = { title: string; detail: string; cost: string }
 
@@ -40,6 +55,8 @@ export type Status = {
   payments: Payment[]
   reimbursements: Reimbursement[]
   freeTools: FreeTool[]
+  /** اختياري: لو مش موجود، قسم الوفر ما بيظهرش */
+  savings?: Saving[]
   asks: Ask[]
   nextNeeds: NextNeed[]
 }

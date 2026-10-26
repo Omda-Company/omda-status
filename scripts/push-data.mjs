@@ -29,6 +29,13 @@ const data = JSON.parse(readFileSync(DATA_FILE, 'utf8'))
 
 // فحص سريع للشكل قبل الرفع، عشان ملف ناقص ما يوقّعش اللوحة
 const need = ['meta', 'phases', 'days', 'budget', 'payments', 'reimbursements', 'freeTools', 'asks', 'nextNeeds']
+// savings اختياري، بس لو موجود لازم يبقى سليم
+for (const s of data.savings ?? []) {
+  if (!(s.item && Array.isArray(s.insteadUsd) && s.insteadUsd.length === 2 && s.ourUsd >= 0)) {
+    console.error('بند وفر ناقص: ' + JSON.stringify(s))
+    process.exit(1)
+  }
+}
 const missing = need.filter((k) => !(k in data))
 if (missing.length) {
   console.error('الملف ناقصه: ' + missing.join('، '))

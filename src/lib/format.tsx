@@ -1,4 +1,4 @@
-import type { Payment, Status } from '@/data/types'
+import type { Payment, Saving, Status } from '@/data/types'
 
 const AR = '٠١٢٣٤٥٦٧٨٩'
 
@@ -61,3 +61,14 @@ export function settlement({ payments, reimbursements }: Status): Map<Payment, S
 }
 
 export const RECURRING: Record<Payment['recurring'], string> = { monthly: 'شهري', yearly: 'سنوي', once: 'مرة واحدة' }
+
+/** الوفر الشهري لكل بند، والإجمالي كمدى (أقل – أعلى). */
+export const saved = (s: Saving): [number, number] => [Math.max(0, s.insteadUsd[0] - s.ourUsd), Math.max(0, s.insteadUsd[1] - s.ourUsd)]
+
+export function savingTotals(savings: Saving[] = []) {
+  const monthly = savings.reduce<[number, number]>((t, s) => {
+    const [a, b] = saved(s)
+    return [t[0] + a, t[1] + b]
+  }, [0, 0])
+  return { monthly, yearly: [monthly[0] * 12, monthly[1] * 12] as [number, number] }
+}
