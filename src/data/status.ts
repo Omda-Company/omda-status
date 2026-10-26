@@ -292,14 +292,14 @@ export const payments: Payment[] = [
   { date: '2026-10-26', item: 'GitHub Team', detail: 'مستخدم واحد', usd: 4, rate: 55, recurring: 'monthly' },
 ]
 
-export type Reimbursement = { date: string; egp: number; note?: string }
+export type Reimbursement = { date: string; egp: number; from: string; note?: string }
 
 /**
  * دفعات السداد اللي الشركة دفعتها لأنس بالجنيه. بتغطي المشتريات من الأقدم للأحدث.
- * ما يتكتبش اسم اللي دفع (اللوحة للإدارة، والاسم الوحيد فيها اسم أنس).
+ * اسم اللي دفع بيتكتب (طلب أنس، 2026-10-26).
  */
 export const reimbursements: Reimbursement[] = [
-  { date: '2026-10-26', egp: 2220, note: 'دفعة أولى' },
+  { date: '2026-10-26', egp: 2220, from: 'مروان وائل', note: 'دفعة أولى' },
 ]
 
 /** أدوات اتستخدمت من غير ما تتصرف عليها ميزانية. */

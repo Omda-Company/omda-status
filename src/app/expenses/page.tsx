@@ -133,6 +133,7 @@ export default function Expenses() {
                     <tr>
                       <th>التاريخ</th>
                       <th>المبلغ</th>
+                      <th>من</th>
                       <th>ملاحظة</th>
                     </tr>
                   </thead>
@@ -143,7 +144,8 @@ export default function Expenses() {
                         <td>
                           <b>{egp(r.egp)}</b>
                         </td>
-                        <td>{r.note ?? 'سداد من الشركة'}</td>
+                        <td>{r.from}</td>
+                        <td>{r.note ?? '—'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -151,6 +153,7 @@ export default function Expenses() {
                     <tr>
                       <td>إجمالي المسدد</td>
                       <td>{egp(t.paidBackEgp)}</td>
+                      <td />
                       <td>
                         <span className={`chip ${t.owedEgp > 0 ? 'wait' : 'ok'}`}>{t.owedEgp > 0 ? `المتبقي ${egp(t.owedEgp)}` : '✓ لا يوجد مستحق'}</span>
                       </td>
