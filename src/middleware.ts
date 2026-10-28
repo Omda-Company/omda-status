@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { COOKIE, config as authConfig, same, tokenFor } from '@/lib/auth'
 
-/** كل صفحة مقفولة ما عدا صفحة الدخول ومسارها، واللوجو. */
+/** كل صفحة مقفولة ما عدا صفحة الدخول ومسارها، واللوجو، والنماذج العامة بالرمز (/f و/api/form). */
 export async function middleware(req: NextRequest) {
   const { ready, password, secret } = authConfig()
   if (!ready) {
@@ -22,5 +22,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!login|api/login|api/keepalive|_next/static|_next/image|logo.png|favicon.ico|robots.txt).*)'],
+  matcher: ['/((?!login|api/login|api/keepalive|api/form|f/|_next/static|_next/image|logo.png|favicon.ico|robots.txt).*)'],
 }
