@@ -45,10 +45,10 @@ npm run dev                  # http://localhost:3000
 
 1. مشروع Supabase للعمدة (الخطوات في `omda-ai/supabase/README.md`)، وشغّل [supabase/migrations/001_dashboard_data.sql](supabase/migrations/001_dashboard_data.sql) في SQL Editor.
 2. في `D:\Al-Omda\.env`: `OMDA_SUPABASE_URL` و`OMDA_SUPABASE_SECRET_KEY`.
-3. في Vercel: `SUPABASE_URL` و`SUPABASE_SECRET_KEY` و`CRON_SECRET`، وبعدين Redeploy.
+3. في Vercel: `SUPABASE_URL` و`SUPABASE_SECRET_KEY`، وبعدين Redeploy.
 4. `npm run push-data`.
 
-**Supabase المجاني بيقف لوحده بعد أسبوع من غير نشاط.** عشان كده Vercel بيبعت طلب لـ `/api/keepalive` كل يوم الساعة 6 الصبح (`vercel.json`)، والطلب محمي بـ `CRON_SECRET`.
+**Supabase على خطة Pro من 2026-11-22،** فمبيقفش لوحده. والـ cron اليومي (`/api/keepalive`) اللي كان بيصحّيه اتشال.
 
 ## الحماية
 

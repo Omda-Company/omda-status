@@ -28,7 +28,6 @@ export async function GET() {
       auth: authConfig().ready,
       supabase,
       supabaseHost: s.url ? new URL(s.url).host.replace(/^[^.]{4}/, '****') : null,
-      cronSecretSet: Boolean((process.env.CRON_SECRET || '').trim()),
       envNames: Object.keys(process.env).filter((n) => /STATUS|SUPABASE|CRON/i.test(n)).sort(),
     },
     { headers: { 'Cache-Control': 'no-store' } },
