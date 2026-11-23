@@ -28,11 +28,11 @@ export const Money = ({ children }: { children: React.ReactNode }) => (
   </bdi>
 )
 
-export const toEgp = (p: Payment) => p.usd * p.rate
+export const toEgp = (p: Payment) => p.egp ?? (p.usd ?? 0) * p.rate
 
 /** إجماليات المصروفات: كل عملية بسعر صرف يوم شرائها. */
 export function spendTotals({ payments, reimbursements, budget }: Status) {
-  const totalUsd = payments.reduce((s, p) => s + p.usd, 0)
+  const totalUsd = payments.reduce((s, p) => s + (p.usd ?? 0), 0)
   const totalEgp = payments.reduce((s, p) => s + toEgp(p), 0)
   const paidBackEgp = reimbursements.reduce((s, r) => s + r.egp, 0)
   const owedEgp = Math.max(0, totalEgp - paidBackEgp)

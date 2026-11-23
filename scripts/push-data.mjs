@@ -42,7 +42,7 @@ if (missing.length) {
   process.exit(1)
 }
 for (const p of data.payments) {
-  if (!(p.usd > 0 && p.rate > 0 && /^\d{4}-\d{2}-\d{2}$/.test(p.date))) {
+  if (!((p.usd > 0 || p.egp > 0) && p.rate > 0 && /^\d{4}-\d{2}-\d{2}$/.test(p.date))) {
     console.error('عملية شراء ناقصة التاريخ أو المبلغ أو سعر الصرف: ' + JSON.stringify(p))
     process.exit(1)
   }

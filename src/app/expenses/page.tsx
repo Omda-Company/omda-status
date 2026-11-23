@@ -32,16 +32,16 @@ export default async function Expenses() {
       <main className="wrap">
         <section className="stats" aria-label="ملخص المصروفات">
           <div className="stat">
-            <span className="stat-label">إجمالي المدفوع بالدولار</span>
+            <span className="stat-label">إجمالي المصروفات</span>
+            <span className="stat-value num">{egp(t.totalEgp)}</span>
+            <span className="stat-sub num">{ar(payments.length)} بنود</span>
+          </div>
+          <div className="stat">
+            <span className="stat-label">منها اشتراكات بالدولار</span>
             <span className="stat-value num">
               <Money>{usd(t.totalUsd)}</Money>
             </span>
-            <span className="stat-sub num">{ar(payments.length)} عمليات شراء</span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">المقابل بالجنيه</span>
-            <span className="stat-value num">{egp(t.totalEgp)}</span>
-            <span className="stat-sub">بسعر صرف يوم كل عملية</span>
+            <span className="stat-sub">محسوبة بسعر الصرف المسجل لكل بند</span>
           </div>
           <div className="stat">
             <span className="stat-label">تم سداده</span>
@@ -128,7 +128,7 @@ export default async function Expenses() {
         <section className="panel" aria-labelledby="buys-h">
           <div className="panel-h">
             <h2 id="buys-h">عمليات الشراء</h2>
-            <p>تُدفع بالدولار وتُسدَّد بالجنيه بسعر صرف يوم الشراء</p>
+            <p>البنود الدولارية تُحسب بالجنيه بسعر الصرف المسجل، والبنود المدفوعة بالجنيه بقيمتها الفعلية</p>
           </div>
           <div className="panel-b">
             <div className="table-wrap">
@@ -153,10 +153,8 @@ export default async function Expenses() {
                         {p.detail && <small>{p.detail}</small>}
                       </td>
                       <td>{RECURRING[p.recurring]}</td>
-                      <td>
-                        <Money>{usd(p.usd)}</Money>
-                      </td>
-                      <td>{ar(p.rate)} ج.م</td>
+                      <td>{p.usd != null ? <Money>{usd(p.usd)}</Money> : '—'}</td>
+                      <td>{p.usd != null && p.egp == null ? `${ar(p.rate)} ج.م` : '—'}</td>
                       <td>
                         <b>{egp(toEgp(p))}</b>
                       </td>
@@ -186,7 +184,7 @@ export default async function Expenses() {
               </table>
             </div>
             <p className="note">
-              المبلغ بالجنيه = المبلغ بالدولار × سعر الدولار يوم الشراء. والاشتراكات الشهرية تُسجَّل عملية جديدة عند كل تجديد بسعر يومها.
+              المبلغ بالجنيه = المبلغ بالدولار × سعر الصرف المسجل، أو القيمة الفعلية المدفوعة بالجنيه عند عدم وجود سعر صرف. والاشتراكات الشهرية تُسجَّل عملية جديدة عند كل تجديد بسعر يومها.
             </p>
           </div>
         </section>

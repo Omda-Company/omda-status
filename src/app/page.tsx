@@ -59,7 +59,7 @@ export default async function Page() {
             <span className="stat-label">المصروف حتى الآن</span>
             <span className="stat-value num">{egp(t.totalEgp)}</span>
             <span className="stat-sub num">
-              <Money>{usd(t.totalUsd)}</Money> بسعر صرف يوم الشراء
+              منها <Money>{usd(t.totalUsd)}</Money> اشتراكات بالدولار
             </span>
           </div>
         </section>
@@ -175,7 +175,7 @@ export default async function Page() {
                     <span>المدفوع حتى الآن</span>
                     <b>{egp(t.totalEgp)}</b>
                     <small>
-                      <Money>{usd(t.totalUsd)}</Money>
+                      منها <Money>{usd(t.totalUsd)}</Money> بالدولار
                     </small>
                   </div>
                   <div>
