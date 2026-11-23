@@ -1,6 +1,9 @@
+import CountUp from '@/components/CountUp'
 import Header from '@/components/Header'
+import SavingsHero from '@/components/SavingsHero'
 import { getStatus } from '@/lib/data'
 import { Money, RECURRING, ar, egp, fmtDate, range, saved, savingTotals, settlement, spendTotals, toEgp, usd } from '@/lib/format'
+import type { Saving } from '@/data/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,6 +13,114 @@ const STATUS = {
   pending: { cls: 'wait', text: 'بانتظار الاعتماد' },
   free: { cls: 'free', text: 'مجاني' },
 } as const
+
+const PART_COLORS = ['var(--save)', 'var(--gold)', '#4f9fb8']
+
+/** مدة استرداد تكلفة لمرة واحدة من الوفر الشهري (بالحد الأدنى). */
+function payback(onceEgp: number, monthlyEgp: number) {
+  if (monthlyEgp <= 0) return null
+  const m = onceEgp / monthlyEgp
+  if (m < 0.9) return 'أقل من شهر'
+  if (m < 1.5) return 'نحو شهر واحد'
+  return `نحو ${ar(Math.round(m))} أشهر`
+}
+
+/** البند الأبرز في الوفر: دفعنا مرة واحدة ← بنوفّر كل شهر، ومدة الاسترداد، والنمو، والتفصيل، وطريقة الحساب. */
+function Featured({ s, rate }: { s: Saving; rate: number }) {
+  const [lo, hi] = saved(s).map((n) => n * rate) as [number, number]
+  const pb = s.onceEgp ? payback(s.onceEgp, lo) : null
+  const partsMax = (s.parts ?? []).reduce((n, p) => n + p.usd[1], 0)
+  return (
+    <section className="feat" aria-labelledby="feat-h">
+      <div className="feat-h">
+        <span className="feat-tag">الإنجاز الأبرز</span>
+        <h2 id="feat-h">
+          {s.item}
+          {s.term && (
+            <>
+              {' '}
+              <small dir="ltr">({s.term})</small>
+            </>
+          )}
+        </h2>
+        {s.explain && <p>{s.explain}</p>}
+      </div>
+
+      <div className="flow">
+        <div className="flow-box paid">
+          <small>دفعنا مرة واحدة</small>
+          <b className="num">{s.onceEgp ? (<><CountUp value={s.onceEgp} kind="num" ms={1100} /> <small className="cur">ج.م</small></>) : s.once}</b>
+          <span>{s.ourWay}</span>
+        </div>
+        <div className="flow-arrow" aria-hidden>
+          ←
+        </div>
+        <div className="flow-box gain">
+          <small>نوفّر كل شهر</small>
+          <b className="num">
+            <CountUp value={lo} kind="num" delay={300} /> – <CountUp value={hi} kind="num" delay={420} /> <small className="cur">ج.م</small>
+          </b>
+          <span>{s.instead}</span>
+        </div>
+      </div>
+
+      <div className="feat-facts">
+        {pb && (
+          <div className="fact">
+            <span>استرداد التكلفة</span>
+            <b>{pb}</b>
+          </div>
+        )}
+        {s.growthUsd && (
+          <div className="fact">
+            <span>مع نمو المبيعات يصل الوفر إلى</span>
+            <b className="num">
+              {Math.round(s.growthUsd[0] * rate).toLocaleString('ar-EG')} – {egp(s.growthUsd[1] * rate)} شهريًا
+            </b>
+          </div>
+        )}
+        <div className="fact">
+          <span>الملكية</span>
+          <b>النماذج ملك للشركة، وتُستخدم في كل نظام قادم</b>
+        </div>
+      </div>
+
+      {s.parts && s.parts.length > 0 && (
+        <div className="parts">
+          <p className="parts-h">مصادر الوفر الشهري</p>
+          <div className="parts-bar" aria-hidden>
+            {s.parts.map((p, i) => (
+              <i key={p.name} style={{ flex: p.usd[1], background: PART_COLORS[i % PART_COLORS.length] }} />
+            ))}
+          </div>
+          <ul className="parts-list">
+            {s.parts.map((p, i) => (
+              <li key={p.name}>
+                <span className="dot" style={{ background: PART_COLORS[i % PART_COLORS.length] }} />
+                {p.name}
+                <b className="num">
+                  {Math.round(p.usd[0] * rate).toLocaleString('ar-EG')} – {egp(p.usd[1] * rate)}
+                </b>
+                <small className="num">{Math.round((p.usd[1] / partsMax) * 100).toLocaleString('ar-EG')}٪</small>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {s.method && s.method.length > 0 && (
+        <details className="how">
+          <summary>كيف حسبنا هذا الرقم؟</summary>
+          <ul>
+            {s.method.map((m) => (
+              <li key={m}>{m}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </section>
+  )
+}
 
 export default async function Expenses() {
   const data = await getStatus()
@@ -24,67 +135,29 @@ export default async function Expenses() {
     owed: { cls: 'wait', text: () => 'مستحق' },
   } as const
   const maxLine = Math.max(...budget.map((b) => b.monthly[1]))
+  const featured = savings.find((s) => s.featured)
+  const others = savings.filter((s) => s !== featured)
+  const monthlyEgp = sv.monthly.map((n) => n * t.refRate) as [number, number]
+  const paidPct = t.totalEgp > 0 ? Math.min(100, (t.paidBackEgp / t.totalEgp) * 100) : 0
 
   return (
     <>
       <Header meta={meta} current="/expenses" title="المصروفات" pdfName="المصروفات" excelHref="/api/expenses-excel" />
 
       <main className="wrap">
-        <section className="stats" aria-label="ملخص المصروفات">
-          <div className="stat">
-            <span className="stat-label">إجمالي المصروفات</span>
-            <span className="stat-value num">{egp(t.totalEgp)}</span>
-            <span className="stat-sub num">{ar(payments.length)} بنود</span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">منها اشتراكات بالدولار</span>
-            <span className="stat-value num">
-              <Money>{usd(t.totalUsd)}</Money>
-            </span>
-            <span className="stat-sub">محسوبة بسعر الصرف المسجل لكل بند</span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">تم سداده</span>
-            <span className="stat-value num">{egp(t.paidBackEgp)}</span>
-            <span className="stat-sub">بالجنيه المصري</span>
-          </div>
-          <div className="stat stat-alert">
-            <span className="stat-label">مستحق السداد</span>
-            <span className="stat-value num">{egp(t.owedEgp)}</span>
-            <span className="stat-sub">بالجنيه المصري</span>
-          </div>
-        </section>
+        {savings.length > 0 && t.refRate > 0 && <SavingsHero monthlyEgp={monthlyEgp} spentEgp={t.totalEgp} />}
 
-        {savings.length > 0 && (
+        {featured && <Featured s={featured} rate={t.refRate} />}
+
+        {others.length > 0 && (
           <section className="panel save-panel" aria-labelledby="save-h">
             <div className="panel-h">
-              <h2 id="save-h">ما وفّرناه للشركة</h2>
+              <h2 id="save-h">وفر إضافي</h2>
               <p>مقارنةً بتقرير تقدير التكاليف ({ar('20 أكتوبر 2026')})</p>
             </div>
             <div className="panel-b">
-              <div className="money num">
-                <div>
-                  <span>الوفر شهريًا</span>
-                  <b>
-                    <Money>{range(sv.monthly)}</Money>
-                  </b>
-                </div>
-                {t.refRate > 0 && (
-                  <div>
-                    <span>تقديريًا بالجنيه</span>
-                    <b>{range(sv.monthly.map((n) => n * t.refRate) as [number, number], egp)}</b>
-                  </div>
-                )}
-                <div>
-                  <span>الوفر المتوقع خلال عام</span>
-                  <b>
-                    <Money>{range(sv.yearly)}</Money>
-                  </b>
-                </div>
-              </div>
-
               <ul className="saves">
-                {savings.map((s) => (
+                {others.map((s) => (
                   <li key={s.item} className="save">
                     <div className="save-top">
                       <b>
@@ -97,13 +170,7 @@ export default async function Expenses() {
                         )}
                       </b>
                       <span className="chip ok num">
-                        {s.insteadUsd ? (
-                          <>
-                            وفر <Money>{range(saved(s))}</Money> شهريًا
-                          </>
-                        ) : (
-                          s.chip ?? 'وفر مستمر'
-                        )}
+                        {s.insteadUsd ? <>وفر {range(saved(s).map((n) => n * t.refRate) as [number, number], egp)} شهريًا</> : (s.chip ?? 'وفر مستمر')}
                       </span>
                     </div>
                     {s.explain && <p className="save-explain">{s.explain}</p>}
@@ -128,14 +195,48 @@ export default async function Expenses() {
                   </li>
                 ))}
               </ul>
-              {t.refRate > 0 && (
-                <p className="note">
-                  الوفر = تكلفة البديل في التقرير − ما يُدفع فعليًا، شهريًا. والتقدير بالجنيه بسعر آخر عملية شراء ({ar(t.refRate)} ج.م للدولار).
-                </p>
-              )}
+              <p className="note">
+                الوفر = تكلفة البديل − ما يُدفع فعليًا، شهريًا. وبالجنيه بسعر آخر عملية شراء ({ar(t.refRate)} ج.م للدولار).
+              </p>
             </div>
           </section>
         )}
+
+        <div className="divider">
+          <span>المصروفات والسداد</span>
+        </div>
+
+        <section className="stats" aria-label="ملخص المصروفات">
+          <div className="stat">
+            <span className="stat-label">إجمالي المصروفات</span>
+            <span className="stat-value num">
+              <CountUp value={t.totalEgp} kind="egp" ms={1100} />
+            </span>
+            <span className="stat-sub num">{ar(payments.length)} بنود</span>
+          </div>
+          <div className="stat">
+            <span className="stat-label">منها اشتراكات بالدولار</span>
+            <span className="stat-value num">
+              <CountUp value={t.totalUsd} kind="usd" ms={1100} />
+            </span>
+            <span className="stat-sub">محسوبة بسعر الصرف المسجل لكل بند</span>
+          </div>
+          <div className="stat stat-ok">
+            <span className="stat-label">تم سداده</span>
+            <span className="stat-value num">
+              <CountUp value={t.paidBackEgp} kind="egp" ms={1100} />
+            </span>
+            <span className="settle-bar" aria-hidden>
+              <i style={{ width: `${paidPct}%` }} />
+            </span>
+            <span className="stat-sub num">{ar(Math.floor(paidPct))}٪ من الإجمالي</span>
+          </div>
+          <div className={`stat ${t.owedEgp > 0 ? 'stat-alert' : 'stat-ok'}`}>
+            <span className="stat-label">مستحق السداد</span>
+            <span className="stat-value num">{egp(t.owedEgp)}</span>
+            <span className="stat-sub">بالجنيه المصري</span>
+          </div>
+        </section>
 
         <section className="panel" aria-labelledby="buys-h">
           <div className="panel-h">

@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from 'next'
-import { Noto_Kufi_Arabic, Readex_Pro } from 'next/font/google'
+import { Cairo } from 'next/font/google'
 import './globals.css'
 
-const head = Noto_Kufi_Arabic({ subsets: ['arabic'], weight: ['500', '700'], variable: '--font-head', display: 'swap' })
-const body = Readex_Pro({ subsets: ['arabic', 'latin'], weight: ['300', '400', '500', '600'], variable: '--font-body', display: 'swap' })
+// خط Cairo للعناوين والنص: واضح، وأوزانه التقيلة (800، و900) للأرقام اللي عايزينها تلفت النظر
+const cairo = Cairo({ subsets: ['arabic', 'latin'], weight: ['400', '500', '600', '700', '800', '900'], variable: '--font-cairo', display: 'swap' })
 
 export const metadata: Metadata = {
   title: 'لوحة متابعة التحول الرقمي — بن العمدة',
@@ -24,7 +24,7 @@ const themeScript = `try{var t=localStorage.getItem('omda-theme');if(t==='dark'|
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" className={`${head.variable} ${body.variable}`} suppressHydrationWarning>
+    <html lang="ar" dir="rtl" className={cairo.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

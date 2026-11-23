@@ -49,6 +49,16 @@ export type Saving = {
   once?: string
   /** نص الشارة لو مفيش رقم شهري */
   chip?: string
+  /** تكلفة لمرة واحدة بالجنيه (للحساب: مدة استرداد التكلفة) */
+  onceEgp?: number
+  /** البند الأبرز: بيتعرض ككارت كبير لوحده */
+  featured?: boolean
+  /** الوفر الشهري بالدولار بعد نمو المبيعات */
+  growthUsd?: [number, number]
+  /** تفصيل الوفر الشهري (مثلًا الصور، والملفات، والصوت) */
+  parts?: { name: string; usd: [number, number] }[]
+  /** خطوات الحساب، بتظهر تحت "كيف حسبنا" */
+  method?: string[]
 }
 export type Ask = { title: string; detail: string; since: string; state: 'waiting' | 'done' }
 export type NextNeed = { title: string; detail: string; cost: string }
