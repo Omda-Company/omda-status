@@ -27,7 +27,7 @@ export default async function Expenses() {
 
   return (
     <>
-      <Header meta={meta} current="/expenses" title="المصروفات" pdfName="المصروفات" />
+      <Header meta={meta} current="/expenses" title="المصروفات" pdfName="المصروفات" excelHref="/api/expenses-excel" />
 
       <main className="wrap">
         <section className="stats" aria-label="ملخص المصروفات">

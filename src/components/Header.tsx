@@ -9,7 +9,7 @@ const PAGES = [
   { href: '/expenses', label: 'المصروفات' },
 ]
 
-export default function Header({ meta, current, title, pdfName }: { meta: Meta; current: string; title: string; pdfName: string }) {
+export default function Header({ meta, current, title, pdfName, excelHref }: { meta: Meta; current: string; title: string; pdfName: string; excelHref?: string }) {
   return (
     <header className="band">
       <div className="wrap">
@@ -38,6 +38,11 @@ export default function Header({ meta, current, title, pdfName }: { meta: Meta; 
             ))}
           </nav>
           <div className="band-btns">
+            {excelHref && (
+              <a className="ghost" href={excelHref} download style={{ textDecoration: 'none' }}>
+                تنزيل Excel
+              </a>
+            )}
             <PrintButton name={pdfName} />
             <ThemeToggle />
             <form method="post" action="/api/logout">
