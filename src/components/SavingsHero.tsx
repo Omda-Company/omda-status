@@ -73,7 +73,21 @@ export default function SavingsHero({ monthlyEgp, spentEgp }: { monthlyEgp: [num
           كل جنيه صُرف يوفّر نحو <b className="num">{ratio.toLocaleString('ar-EG')}</b> جنيهًا خلال عام
         </p>
       )}
-      <p className="hero-note">تقدير بالحد الأدنى، وتفاصيل كل بند وطريقة حسابه أدناه.</p>
+      <p className="hero-note">
+        تقدير بالحد الأدنى.{' '}
+        <button
+          type="button"
+          className="hero-how no-print"
+          onClick={() => {
+            const d = document.getElementById('how') as HTMLDetailsElement | null
+            if (!d) return
+            d.open = true
+            d.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }}
+        >
+          كيف حسبنا هذا الرقم؟
+        </button>
+      </p>
     </section>
   )
 }

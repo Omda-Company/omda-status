@@ -109,8 +109,14 @@ function Featured({ s, rate }: { s: Saving; rate: number }) {
       )}
 
       {s.method && s.method.length > 0 && (
-        <details className="how">
-          <summary>كيف حسبنا هذا الرقم؟</summary>
+        <details className="how" id="how">
+          <summary>
+            <span className="how-ico" aria-hidden>
+              ؟
+            </span>
+            كيف حسبنا هذا الرقم؟
+            <small>اضغط لعرض الخطوات والافتراضات</small>
+          </summary>
           <ul>
             {s.method.map((m) => (
               <li key={m}>{m}</li>
