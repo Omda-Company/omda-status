@@ -63,7 +63,8 @@ export function settlement({ payments, reimbursements }: Status): Map<Payment, S
 export const RECURRING: Record<Payment['recurring'], string> = { monthly: 'شهري', yearly: 'سنوي', once: 'مرة واحدة' }
 
 /** الوفر الشهري لكل بند، والإجمالي كمدى (أقل – أعلى). */
-export const saved = (s: Saving): [number, number] => [Math.max(0, s.insteadUsd[0] - s.ourUsd), Math.max(0, s.insteadUsd[1] - s.ourUsd)]
+export const saved = (s: Saving): [number, number] =>
+  s.insteadUsd ? [Math.max(0, s.insteadUsd[0] - (s.ourUsd ?? 0)), Math.max(0, s.insteadUsd[1] - (s.ourUsd ?? 0))] : [0, 0]
 
 export function savingTotals(savings: Saving[] = []) {
   const monthly = savings.reduce<[number, number]>((t, s) => {

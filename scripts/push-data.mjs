@@ -31,7 +31,8 @@ const data = JSON.parse(readFileSync(DATA_FILE, 'utf8'))
 const need = ['meta', 'phases', 'days', 'budget', 'payments', 'reimbursements', 'freeTools', 'asks', 'nextNeeds']
 // savings اختياري، بس لو موجود لازم يبقى سليم
 for (const s of data.savings ?? []) {
-  if (!(s.item && Array.isArray(s.insteadUsd) && s.insteadUsd.length === 2 && s.ourUsd >= 0)) {
+  const monthly = Array.isArray(s.insteadUsd) && s.insteadUsd.length === 2 && s.ourUsd >= 0
+  if (!(s.item && s.ourWay && (monthly || s.once))) {
     console.error('بند وفر ناقص: ' + JSON.stringify(s))
     process.exit(1)
   }

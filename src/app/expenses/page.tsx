@@ -97,7 +97,13 @@ export default async function Expenses() {
                         )}
                       </b>
                       <span className="chip ok num">
-                        وفر <Money>{range(saved(s))}</Money> شهريًا
+                        {s.insteadUsd ? (
+                          <>
+                            وفر <Money>{range(saved(s))}</Money> شهريًا
+                          </>
+                        ) : (
+                          s.chip ?? 'وفر مستمر'
+                        )}
                       </span>
                     </div>
                     {s.explain && <p className="save-explain">{s.explain}</p>}
@@ -105,12 +111,18 @@ export default async function Expenses() {
                       <span className="save-was">
                         <small>بدلًا من</small>
                         <s>
-                          {s.instead} · <Money>{range(s.insteadUsd)}</Money>
+                          {s.instead}
+                          {s.insteadUsd && (
+                            <>
+                              {' '}
+                              · <Money>{range(s.insteadUsd)}</Money>
+                            </>
+                          )}
                         </s>
                       </span>
                       <span className="save-now">
                         <small>ما فعلناه</small>
-                        {s.ourWay} · <Money>{s.ourUsd > 0 ? usd(s.ourUsd) : '$0'}</Money>
+                        {s.ourWay} · {s.once ? <b>{s.once}</b> : <Money>{(s.ourUsd ?? 0) > 0 ? usd(s.ourUsd ?? 0) : '$0'}</Money>}
                       </span>
                     </div>
                   </li>

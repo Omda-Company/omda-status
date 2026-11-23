@@ -41,9 +41,14 @@ export type Saving = {
   term?: string
   explain?: string
   instead: string
-  insteadUsd: [number, number]
+  /** اختياري: لو مش موجود، البند بيظهر من غير رقم شهري وما بيدخلش في الإجمالي */
+  insteadUsd?: [number, number]
   ourWay: string
-  ourUsd: number
+  ourUsd?: number
+  /** تكلفة لمرة واحدة كنص (مثلًا "6,000 ج.م مرة واحدة")، بتظهر بدل ourUsd */
+  once?: string
+  /** نص الشارة لو مفيش رقم شهري */
+  chip?: string
 }
 export type Ask = { title: string; detail: string; since: string; state: 'waiting' | 'done' }
 export type NextNeed = { title: string; detail: string; cost: string }
